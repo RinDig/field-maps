@@ -101,13 +101,13 @@ export const MAP = {
         kicker: '00 · the corps', place: 'Japan', x: W.corps + 3, tilt: -.015,
         headline: ['Systems that', 'cannot fail.'],
         sub: ['F-18 and F-35 avionics and crypto,', 'on the border of North Korea.'],
-        why: 'he still builds to that standard',
+        why: 'I still build to that standard',
         stamp: { big: '8 years', small: ['U.S. Marine Corps'], x: W.corps + 19.6 },
       },
       aphorism: { lines: ['“Build at the layer that survives.”'], x: W.corps + 19.6, tilt: .015 },
       captions: [
-        { text: 'fig. 1 — Jake, USMC', x: W.corps + 7.7, y: 2.85, tilt: -.02 },
-        { text: 'fig. 2 — the F-35B he kept flying', x: W.corps + 12.7, y: 4.45, tilt: .015 },
+        { text: 'fig. 1 — me, USMC', x: W.corps + 7.7, y: 2.85, tilt: -.02 },
+        { text: 'fig. 2 — the F-35B I worked on', x: W.corps + 12.7, y: 4.45, tilt: .015 },
       ],
       art: [
         { file: 'terrain-t1.png', x: W.corps + 12.6, y: 2.7, h: 6.4, wallPin: true, sway: 0 },
@@ -123,12 +123,12 @@ export const MAP = {
       story: {
         kicker: '01 · the road', place: 'Middle East', x: W.road + 3, tilt: .015,
         headline: ['Reporting from', 'conflict zones.'],
-        sub: ['A war journalist across the region,', 'then essays at vcwriting.com.'],
-        why: 'he learned to explain hard things',
+        sub: ['I worked the region as a journalist,', 'then wrote at vcwriting.com.'],
+        why: 'I learned to explain hard things',
         stamp: { big: 'Press', small: ['war journalist', 'Middle East'], x: W.road + 14, ink: '#24345a' },
       },
       aphorism: { lines: ['“AI changes the starting line', ' without redrawing the finish line.”'], x: W.road + 14, tilt: -.015 },
-      captions: [ { text: 'fig. 3 — the Middle East', x: W.road + 8.6, y: 1.75, tilt: .02 } ],
+      captions: [ { text: 'fig. 3 — me in the Middle East', x: W.road + 8.6, y: 1.75, tilt: .02 } ],
       art: [
         { file: 'photo-middle-east.png', x: W.road + 8.6, y: 4.75, h: 5.6, wallPin: true, zPin: .06, sway: .004 },
       ],
@@ -141,8 +141,8 @@ export const MAP = {
       ride: 'moto',
       story: {
         kicker: '02 · the practice', place: 'Flagler, 2024', x: W.practice + 3, tilt: -.015,
-        headline: ['Paid to teach', 'his own teachers.'],
-        sub: ['Flagler College hired him first.', 'Then the companies called.'],
+        headline: ['Paid to teach', 'my own teachers.'],
+        sub: ['Flagler College hired me first.', 'Then the companies called.'],
         why: 'the gap was in understanding',
         stamp: { big: '14 films', small: ['delivered to NLP Logix'], x: W.practice + 11.5 },
       },
@@ -157,8 +157,8 @@ export const MAP = {
       story: {
         kicker: '03 · the turn', place: 'Edinburgh', x: W.edinburgh + 3, tilt: -.012,
         headline: ['From running it', 'to governing it.'],
-        sub: ['M.Sc. in Future Governance: data', 'science and political philosophy.'],
-        why: 'he chose the more peaceful route',
+        sub: ['My M.Sc. in Future Governance: data', 'science and political philosophy.'],
+        why: 'I chose the more peaceful route',
         // raised so the plane passes under it
         stamp: { big: 'M.Sc.', small: ['University of Edinburgh'], x: W.edinburgh + 11.5, y: 5.1 },
       },
@@ -172,7 +172,7 @@ export const MAP = {
       story: {
         kicker: '04 · the research', place: '2025', x: W.institute + 3, tilt: .015,
         headline: ['Measuring machines', 'like people.'],
-        sub: ['Building with language models since', 'BERT; used by Edinburgh researchers.'],
+        sub: ['With language models since BERT;', 'Edinburgh researchers use my engine.'],
         why: 'test it before you trust it',
         stamp: { big: '10,000+', small: ['AI responses scored', 'The Ethics Engine'], x: W.institute + 11.5 },
       },
@@ -201,7 +201,7 @@ export const MAP = {
         kicker: '06 · in public', place: 'Mar 2026 →', x: W.notes + 3, tilt: -.015,
         headline: ['Teaching it', 'in public.'],
         sub: ['Millions of views on Instagram;', 'a Skool community rated 5.0.'],
-        why: 'that is how the method spread',
+        why: 'that is how my method spread',
         stamp: { big: '50K', small: ['students in Skool', 'since March 2026'], x: W.notes + 11.5 },
       },
       aphorism: { lines: ['“Map your work,', ' don’t just store it.”'], x: W.notes + 11.5, tilt: .015 },
@@ -215,7 +215,7 @@ export const MAP = {
       story: {
         kicker: '07 · the lyceum', place: '2026', x: W.lyceum + 3, tilt: .015,
         headline: ['Teams that build', 'their own systems.'],
-        sub: ['Companies send their people to learn', 'the method and map their own work.'],
+        sub: ['Companies send their people to learn', 'my method and map their own work.'],
         why: 'now it runs inside companies',
         stamp: { big: '$120K', small: ['one 3-week contract', 'Dubai'], x: W.lyceum + 11.5 },
       },
