@@ -6,7 +6,7 @@
 <title>The Field Map of Jake Van Clief</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦊</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
@@ -62,7 +62,7 @@
 <div id="badge"><div class="k">FIELD MAP</div><div class="n">J. Van Clief</div></div>
 <div id="odo">◈ <b id="km">0</b> <span id="odoUnit">km</span> charted</div>
 <div id="hint">scroll or swipe to travel east <span class="ar">⟶</span><br><small>the route loops forever</small></div>
-<div id="fallback"><p>This map needs WebGL.<br>The flat version lives <a href="index-map-v2.html">here</a>.</p></div>
+<div id="fallback"><p>This map needs WebGL.<br>Open it in a current Chrome, Edge, Firefox or Safari.</p></div>
 
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -201,20 +201,26 @@ function compassRoseTexture() {
 /* handwritten note (paper card + text), returns texture + aspect */
 function noteTexture({ lines, font = '600 46px "Caveat"', ink = '#3b2f21', paper = '#fdf6e6',
                        pin = '#b0503c', w = 640, pad = 44, title = null,
-                       big = null, bigInk = '#b0503c' }) {
+                       big = null, bigInk = '#b0503c', why = null, when = null }) {
   const lh = 60;
-  const BIG_F = '700 108px "Caveat"', BIG_H = 126;
+  const WHY_F = '600 42px "Caveat"', WHY_LH = 50, WHY_TOP = 34;   // the "why it mattered" footer
+  const WHEN_F = '600 40px "Caveat"';
+  const BIG_F = '700 88px "Caveat"', BIG_H = 104;
   const TITLE_H = 78;                      // title line + its hairline rule
   const [, mg] = ctx2d(8, 8);
   mg.font = font;
   let need = Math.max(...lines.map(ln => mg.measureText(ln).width));
   if (title) { mg.font = '600 54px "Caveat"'; need = Math.max(need, mg.measureText(title).width); }
   if (big)   { mg.font = BIG_F;               need = Math.max(need, mg.measureText(big).width); }
+  if (why)   { mg.font = WHY_F;               need = Math.max(need, ...why.map(ln => mg.measureText('↳ ' + ln).width)); }
+  if (title && when) { mg.font = '600 54px "Caveat"'; const tw = mg.measureText(title).width;
+                       mg.font = WHEN_F; need = Math.max(need, tw + 36 + mg.measureText(when).width); }
   w = Math.max(w, Math.ceil(need) + pad * 2 + 8);
   // Height must match where the text actually ENDS, or the last line crowds the bottom
   // edge. Content starts at pad + the pin's clearance, so that has to be in the sum.
   const top = pad + (pin ? 26 : 10);
-  const h = top + (title ? TITLE_H : 0) + (big ? BIG_H : 0) + lines.length * lh + pad;
+  const h = top + (title ? TITLE_H : 0) + (big ? BIG_H : 0) + lines.length * lh
+          + (why ? WHY_TOP + why.length * WHY_LH + 6 : 0) + pad;
   const [c, g] = ctx2d(w, h);
   g.fillStyle = paper;
   g.strokeStyle = '#a99476'; g.lineWidth = 4;
@@ -226,6 +232,8 @@ function noteTexture({ lines, font = '600 46px "Caveat"', ink = '#3b2f21', paper
   if (title) {
     g.font = '600 54px "Caveat"'; g.fillStyle = '#8a4d2c';
     g.fillText(title, pad, y + 42);
+    if (when) { g.font = WHEN_F; g.fillStyle = '#8a765a';
+      g.fillText(when, w - pad - g.measureText(when).width, y + 40); }
     g.strokeStyle = 'rgba(138,118,90,.34)'; g.lineWidth = 1.5;   // hairline under the title
     g.beginPath(); g.moveTo(pad, y + 62); g.lineTo(w - pad, y + 62); g.stroke();
     y += TITLE_H;
@@ -234,6 +242,14 @@ function noteTexture({ lines, font = '600 46px "Caveat"', ink = '#3b2f21', paper
     g.fillText(big, pad, y + 98); y += BIG_H; }
   g.font = font; g.fillStyle = ink;
   for (const ln of lines) { y += lh; g.fillText(ln, pad, y - 12); }
+  if (why) {                                   // dashed rule, then why it mattered in rust ink
+    y += WHY_TOP - 14;
+    g.strokeStyle = 'rgba(160,72,47,.4)'; g.lineWidth = 1.5; g.setLineDash([6, 7]);
+    g.beginPath(); g.moveTo(pad, y); g.lineTo(w - pad, y); g.stroke(); g.setLineDash([]);
+    y += 14;
+    g.font = WHY_F; g.fillStyle = '#9a4430';
+    why.forEach((ln, k) => { y += WHY_LH; g.fillText((k ? '   ' : '↳ ') + ln, pad, y - 10); });
+  }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   return { tex: t, aspect: w / h };
 }
@@ -285,6 +301,8 @@ await Promise.all([
   document.fonts.load('46px "Patrick Hand"'),
   document.fonts.load('500 64px "Caveat"'),
   document.fonts.load('600 84px "Caveat"'),
+  document.fonts.load('700 84px "Caveat"'),
+  document.fonts.load('36px "Special Elite"'),
 ]).catch(() => {});
 
 /* wall + ground */
@@ -327,7 +345,7 @@ await Promise.all([
 }
 
 /* helper — a standing cutout from an image file (project assets/) */
-function cutout(file, { x, h = 3, z = PATH_Z, y = null, sway = .02, bob = 0, phase = Math.random() * 6, flip = false, wallPin = false, framed = false }) {
+function cutout(file, { x, h = 3, z = PATH_Z, y = null, sway = .02, bob = 0, phase = Math.random() * 6, flip = false, wallPin = false, framed = false, zPin = 0.03 }) {
   pending++;
   texLoader.load('assets/' + file, tex => {
     tick();
@@ -338,12 +356,12 @@ function cutout(file, { x, h = 3, z = PATH_Z, y = null, sway = .02, bob = 0, pha
     const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.05 });
     const m = new THREE.Mesh(geo, mat);
     const baseY = y === null ? h / 2 : y;
-    m.position.set(x, baseY, wallPin ? 0.03 : z);
+    m.position.set(x, baseY, wallPin ? zPin : z);
     if (flip) m.scale.x = -1;
     if (framed) {
       const fr = new THREE.Mesh(new THREE.PlaneGeometry(h * a + .24, h + .24),
         new THREE.MeshBasicMaterial({ color: 0xfdf6e6 }));
-      fr.position.set(x, baseY, (wallPin ? 0.03 : z) - .005);
+      fr.position.set(x, baseY, (wallPin ? zPin : z) - .005);
       scene.add(fr);
     }
     scene.add(m);
@@ -370,6 +388,141 @@ function waypoint(label, x) {
   place(waypointTexture(label), { x, y: 1.05, h: .62, z: 0.05, tilt: -.02 });
 }
 
+/* ════════════════ THE FIELD JOURNAL — read from across a room ════════════════
+   A stop with a `story` block is drawn as field-journal paper: a torn ruled
+   page (typed heading, one statement in pen, a highlighted "why"), the proof
+   as a rubber stamp, his line on a typed strip, photo captions on typed slips.
+   One type scale for every piece: PX world units per canvas pixel.            */
+const PX = 1 / 185;
+const F = {
+  typed: '46px "Special Elite"',
+  head:  '700 112px "Caveat"',
+  sub:   '600 52px "Caveat"',
+  why:   '700 56px "Caveat"',
+};
+const INK = '#22180e', PEN = '#1f2b48', STAMP = '#b0362a';
+function seeded(str) { let s = 9; for (const c of str) s = (s * 31 + c.charCodeAt(0)) % 2147483647;
+  return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+const [, MG] = ctx2d(8, 8);
+function tw(font, str, ls = 0) { MG.font = font; MG.letterSpacing = ls + 'px'; const w = MG.measureText(str).width; MG.letterSpacing = '0px'; return w; }
+function txt(g, font, color, str, x, y, ls = 0) { g.font = font; g.fillStyle = color; g.letterSpacing = ls + 'px'; g.fillText(str, x, y); g.letterSpacing = '0px'; }
+function texOf(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  return { tex: t, aspect: c.width / c.height, h: c.height * PX }; }
+// a rectangle with torn edges; `top` rips one edge harder (a page pulled from the journal)
+function tornPts(x, y, w, h, amp, rnd, top = amp, step = 10) {
+  const p = [];
+  for (let t = 0; t < w; t += step) p.push([x + t, y + (rnd() - .5) * top]);
+  for (let t = 0; t < h; t += step) p.push([x + w + (rnd() - .5) * amp, y + t]);
+  for (let t = w; t > 0; t -= step) p.push([x + t, y + h + (rnd() - .5) * amp * 1.5]);
+  for (let t = h; t > 0; t -= step) p.push([x + (rnd() - .5) * amp, y + t]);
+  return p;
+}
+function trace(g, p) { g.beginPath(); g.moveTo(p[0][0], p[0][1]); for (const q of p) g.lineTo(q[0], q[1]); g.closePath(); }
+function paper(g, p, fill) {
+  g.save(); g.shadowColor = 'rgba(60,40,15,.30)'; g.shadowBlur = 22; g.shadowOffsetY = 8;
+  trace(g, p); g.fillStyle = fill; g.fill(); g.restore();
+  g.save(); trace(g, p); g.clip();
+  const xs = p.map(q => q[0]), ys = p.map(q => q[1]);
+  const x0 = Math.min(...xs), y0 = Math.min(...ys);
+  g.translate(x0, y0); grain(g, Math.max(...xs) - x0, Math.max(...ys) - y0, 1200, .35); g.restore();
+  trace(g, p); g.strokeStyle = 'rgba(140,112,72,.45)'; g.lineWidth = 2; g.stroke();
+}
+function tape(g, cx, cy, w, h, ang) {
+  g.save(); g.translate(cx, cy); g.rotate(ang);
+  g.fillStyle = 'rgba(228,214,178,.85)'; g.fillRect(-w / 2, -h / 2, w, h);
+  g.strokeStyle = 'rgba(150,128,88,.25)'; g.lineWidth = 1.5; g.strokeRect(-w / 2, -h / 2, w, h); g.restore();
+}
+function swash(g, x, y, w, h, color, rnd) {           // a highlighter, three rough passes
+  g.save(); g.globalAlpha = .32; g.fillStyle = color;
+  for (let k = 0; k < 3; k++) {
+    const yo = (rnd() - .5) * h * .2;
+    g.beginPath(); g.moveTo(x + rnd() * 10, y + h * .12 + yo); g.lineTo(x + w + rnd() * 16, y + yo);
+    g.lineTo(x + w - 6 + rnd() * 12, y + h + yo); g.lineTo(x + rnd() * 8, y + h * 1.04 + yo); g.closePath(); g.fill();
+  }
+  g.restore();
+}
+function blank(w, h) { return ctx2d(Math.ceil(w), Math.ceil(h)); }
+
+// the journal page: typed heading, the statement in pen, two supporting lines, the why
+function journalPage(s) {
+  const rnd = seeded(s.headline.join()), M = 44, P = 70, L = 112;
+  const kick = s.kicker.toUpperCase() + (s.place ? ' — ' + s.place.toUpperCase() : '');
+  const cw = Math.max(tw(F.typed, kick, 2), ...s.headline.map(l => tw(F.head, l)),
+                      ...(s.sub ?? []).map(l => tw(F.sub, l)), tw(F.why, s.why) + 20);
+  const W_ = cw + P + 120, H_ = 70 + 56 + s.headline.length * L + 22 + (s.sub?.length ?? 0) * 56 + 40 + 64 + 60;
+  const [c, g] = blank(W_ + M * 2, H_ + M * 2);
+  const pts = tornPts(M, M, W_, H_, 3, rnd, 22);
+  paper(g, pts, '#fdfaf0');
+  g.save(); trace(g, pts); g.clip();                 // ruled lines and the red margin
+  g.strokeStyle = 'rgba(80,120,185,.22)'; g.lineWidth = 2;
+  for (let ry = M + 126; ry < M + H_ - 20; ry += 56) { g.beginPath(); g.moveTo(M, ry); g.lineTo(M + W_, ry); g.stroke(); }
+  g.strokeStyle = 'rgba(200,70,60,.4)'; g.beginPath(); g.moveTo(M + 92, M); g.lineTo(M + 92, M + H_); g.stroke();
+  g.restore();
+  tape(g, M + 40, M + 24, 150, 50, -.6);
+  const x = M + 120;
+  let y = M + 96;
+  txt(g, F.typed, '#2a2a2a', kick, x, y, 2);
+  y += 30;
+  for (const l of s.headline) { y += L; txt(g, F.head, PEN, l, x, y - 6); }
+  y += 22;
+  for (const l of s.sub ?? []) { y += 56; txt(g, F.sub, '#3d4a66', l, x, y - 8); }
+  y += 40;
+  swash(g, x - 10, y + 4, tw(F.why, s.why) + 24, 62, '#f1d23c', rnd);
+  txt(g, F.why, PEN, s.why, x, y + 52);
+  return texOf(c);
+}
+// the proof as a worn rubber stamp: one big line, then one or two small ones
+function rubberStamp({ big, small = [], ink = STAMP }) {
+  const rnd = seeded(big + small), M = 60, bf = '150px "Special Elite"', sf = '42px "Special Elite"';
+  const B = big.toUpperCase(), S = small.map(l => l.toUpperCase());
+  const W_ = Math.max(tw(bf, B, 4), ...S.map(l => tw(sf, l, 5))) + 100, H_ = 190 + S.length * 58 + 30;
+  const [c, g] = blank(W_ + M * 2, H_ + M * 2 + 70);
+  g.translate(c.width / 2, c.height / 2); g.rotate(-.07 + (rnd() - .5) * .06); g.translate(-W_ / 2, -H_ / 2);
+  g.strokeStyle = ink; g.lineWidth = 12; g.strokeRect(0, 0, W_, H_);
+  g.lineWidth = 4; g.strokeRect(18, 18, W_ - 36, H_ - 36);
+  txt(g, bf, ink, B, 50, 172, 4);
+  S.forEach((l, k) => txt(g, sf, ink, l, 50, 236 + k * 58, 5));
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'destination-out';   // worn rubber: ink that didn't take
+  for (let k = 0; k < 1100; k++) { g.fillStyle = `rgba(0,0,0,${.35 + rnd() * .6})`;
+    g.beginPath(); g.arc(rnd() * c.width, rnd() * c.height, .8 + rnd() * 3.2, 0, Math.PI * 2); g.fill(); }
+  g.globalCompositeOperation = 'source-over';
+  return texOf(c);
+}
+// his line, typed on a torn strip
+function typedStrip(lines) {
+  const rnd = seeded('t' + lines), M = 40, P = 40, f = '56px "Special Elite"';
+  const W_ = Math.max(...lines.map(l => tw(f, l))) + P * 2, H_ = lines.length * 74 + 44;
+  const [c, g] = blank(W_ + M * 2, H_ + M * 2);
+  paper(g, tornPts(M, M, W_, H_, 6, rnd), '#f6efdc');
+  lines.forEach((l, k) => txt(g, f, INK, l, M + P, M + 74 + k * 74));
+  return texOf(c);
+}
+// a photo caption on a typed slip
+function typedSlip(text) {
+  const rnd = seeded('s' + text), M = 30, P = 28, f = '40px "Special Elite"';
+  const W_ = tw(f, text) + P * 2, H_ = 80;
+  const [c, g] = blank(W_ + M * 2, H_ + M * 2);
+  paper(g, tornPts(M, M, W_, H_, 5, rnd), '#f6efdc');
+  txt(g, f, INK, text, M + P, M + 54);
+  return texOf(c);
+}
+
+// one stop in the journal; the page is what threads tie to
+function buildStory(ch, i, cx, ox) {
+  const s = ch.story;
+  const put = (t, x, y, tilt = 0, z = .07) => place(t, { x: x + ox, y, h: t.h, z, tilt });
+  const page = put(journalPage(s), s.x ?? cx + 3, s.y ?? 5.9, s.tilt ?? 0);
+  noteBox(page);
+  if (ox === 0 && ch.id) anchorOf(ch.id, page);
+  if (s.stamp) noteBox(put(rubberStamp(s.stamp), s.stamp.x, s.stamp.y ?? 4.7, 0, .072));
+  const a = ch.aphorism;
+  if (a) noteBox(put(typedStrip(a.lines.map(l => l.trim())), a.x, a.y ?? 7.05, a.tilt ?? 0));
+  for (const cap of ch.captions ?? []) noteBox(put(typedSlip(cap.text), cap.x, cap.y, cap.tilt ?? 0, .075));
+  for (const st of ch.strips ?? []) noteBox(put(typedStrip(st.lines), st.x, st.y, st.tilt ?? 0));
+  for (const w of ch.extraWriting ?? []) writeSpec(w, i, cx, ox);
+}
+
 /* ════════════════ THE ROUTE — built from map.config.js ════════════════
    Everything here is placement plumbing; the CONTENT lives in MAP. Each
    chapter becomes a waypoint stamp + a pinned note + an inked aphorism +
@@ -384,6 +537,7 @@ function paintSpec(a, ox = 0, dx = 0) {   // dx = auto-layout x when the spec om
   const o = { x: (a.x ?? dx) + ox, h: a.h ?? 3, sway: a.sway ?? .02 };
   if (a.y != null) o.y = a.y;
   if (a.wallPin) o.wallPin = true;
+  if (a.zPin != null) o.zPin = a.zPin;
   if (a.framed)  o.framed = true;
   if (a.flip)    o.flip = true;
   if (a.bob)     o.bob = a.bob;
@@ -394,7 +548,8 @@ function paintSpec(a, ox = 0, dx = 0) {   // dx = auto-layout x when the spec om
 // returns the mesh so callers can anchor threads to it.
 function noteSpec(n, i, cx, ox = 0) {
   return place(noteTexture({ title: n.title ?? null, lines: n.lines, pin: n.pin,
-                             font: n.font, w: n.w, big: n.big ?? null, bigInk: n.bigInk }),
+                             font: n.font, w: n.w, big: n.big ?? null, bigInk: n.bigInk,
+                             why: n.why ?? null, when: n.when ?? null }),
         { x: (n.x ?? cx + 2.5) + ox, y: n.y ?? 5.9, h: n.h ?? 2.5, z: n.z ?? .07,
           tilt: n.tilt ?? (i % 2 ? .03 : -.03) });
 }
@@ -503,7 +658,7 @@ function buildThread(t) {
   const dip = t.dip ?? 4.05;                       // the band the span hangs in
   const sag = t.sag ?? .55;                        // extra droop at the middle
   const ink = t.ink ?? '#a2643f';
-  const z   = t.z ?? .055;                         // behind the cards (z .07), above the wall
+  const z   = t.z ?? .02;                          // behind the painted backdrops (z .03) and the cards (z .07)
 
   // base route: down off the left card, across the sagging span, up into the right
   const base = new THREE.CatmullRomCurve3([
@@ -566,6 +721,8 @@ function buildThread(t) {
         placed = { u, pt, y }; break;
       }
       if (!placed) continue;                 // nowhere clear — better no tag than a hidden one
+      CARDS.push({ x0: placed.pt.x - tw / 2 - .1, x1: placed.pt.x + tw / 2 + .1,   // later tags dodge this one
+                   y0: placed.y - h / 2 - .05,    y1: placed.y + h / 2 + .05 });
       const tan = curve.getTangentAt(placed.u);
       place(tag, { x: placed.pt.x, y: placed.y, z: z + .004,
                    h, tilt: Math.atan2(tan.y, tan.x) * .6 });
@@ -579,6 +736,7 @@ function buildChapter(ch, i, ox = 0) {
   waypoint(ch.wp ?? ('WP·' + String(i).padStart(2, '0')), cx + ox);
   (ch.art   ?? []).forEach((a, k) => paintSpec(a, ox, cx + 7 + k * 4));
   (ch.props ?? []).forEach((p, k) => paintSpec(p, ox, cx + 4 + k * 6));
+  if (ch.story) return buildStory(ch, i, cx, ox);
   if (ch.note) {
     const m = noteSpec(ch.note, i, cx, ox);
     noteBox(m);
@@ -790,7 +948,7 @@ renderer.setAnimationLoop(now => {
   }
 
   // flight: a flying ride (the plane) lifts the whole group off the route
-  const targetFlight = flying ? 3.3 : 0;
+  const targetFlight = flying ? 1.7 : 0;   // low enough to pass under the main cards
   flightY += (targetFlight - flightY) * (1 - Math.exp(-4.5 * dt));
 
   if (flying) {
